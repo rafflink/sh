@@ -1,0 +1,107 @@
+#!/bin/bash
+set -e # Exit on any error
+
+# Detect OS
+OS="$(uname)"
+
+echo "=================================================="
+echo "🚀 Setting up pi, just, and vllm environment..."
+echo "=================================================="
+
+# 1. Install 'just' and 'fd' if not present
+install_dependency() {
+    local cmd=$1
+    if ! command -v "$cmd" &> /dev/null; then
+        echo "📦 Installing '$cmd'..."
+        if command -v brew &> /dev/null; then
+            brew install "$cmd"
+        elif command -v apt-get &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y "$cmd"
+        else
+            echo "❌ Error: Package manager not found. Please install '$cmd' manually."
+            exit 1
+        fi
+    else
+        echo "✅ '$cmd' is already installed."
+    fi
+}
+
+install_dependency "just"
+# Note: On Ubuntu, 'fd' is often packaged as 'fd-find'. We'll try 'fd' but fallback may be needed by the user.
+if [ "$OS" = "Linux" ] && command -v apt-get &> /dev/null; then
+    if ! command -v fdfind &> /dev/null && ! command -v fd &> /dev/null; then
+        echo "📦 Installing 'fd-find'..."
+        sudo apt-get install -y fd-find
+        # Create a symlink if 'fd' doesn't exist
+        mkdir -p "$HOME/.local/bin"
+        ln -s $(command -v fdfind) "$HOME/.local/bin/fd" || true
+    else
+        echo "✅ 'fd' is already installed."
+    fi
+else
+    install_dependency "fd"
+fi
+
+# 2. Add aliases to shell configs
+echo "⚙️  Configuring aliases in shell profiles..."
+for rc_file in "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.bashrc" "$HOME/.bash_profile"; do
+    if [ -f "$rc_file" ]; then
+        # Add j and jg aliases
+        grep -q "alias j='just'" "$rc_file" || echo "alias j='just'" >> "$rc_file"
+        grep -q "alias jg='just --global-justfile'" "$rc_file" || echo "alias jg='just --global-justfile'" >> "$rc_file"
+        # Add vllm-start alias
+        grep -q "alias vllm-start=" "$rc_file" || echo "alias vllm-start='vllm-mlx serve mlx-community/Llama-3.2-3B-Instruct-4bit --port 8000'" >> "$rc_file"
+    fi
+done
+
+# 3. Create global justfile with vllm-start recipe
+echo "📝 Creating global justfile ($HOME/.justfile)..."
+if [ ! -f "$HOME/.justfile" ]; then
+    cat > "$HOME/.justfile" << 'JUSTEOF'
+vllm-start:
+	vllm-mlx serve mlx-community/Llama-3.2-3B-Instruct-4bit --port 8000
+JUSTEOF
+else
+    echo "✅ $HOME/.justfile already exists. Ensuring vllm-start recipe is present..."
+    grep -q "vllm-start:" "$HOME/.justfile" || printf "vllm-start:\n\tvllm-mlx serve mlx-community/Llama-3.2-3B-Instruct-4bit --port 8000\n" >> "$HOME/.justfile"
+fi
+
+# 4. Install pi extensions
+echo "🧩 Installing pi agent extensions..."
+extensions=(
+  "git:github.com/nicobailon/pi-messenger"
+  "git:github.com/nicobailon/pi-web-access"
+  "git:github.com/nicobailon/pi-interactive-shell"
+  "git:github.com/tmustier/pi-agent-teams"
+  "git:github.com/nicobailon/pi-review-loop"
+  "git:github.com/galz10/pickle-rick-extension"
+  "git:github.com/nicobailon/pi-powerline-footer"
+  "git:github.com/nicobailon/pi-model-switch"
+  "git:github.com/tintinweb/pi-supervisor"
+  "git:github.com/gvkhosla/compound-engineering-pi"
+)
+
+install_pi_ext() {
+    echo "   -> Installing $1"
+    pi install "$1"
+}
+
+if command -v pi &> /dev/null; then
+    for ext in "${extensions[@]}"; do
+        install_pi_ext "$ext"
+    done
+else
+    echo "⚠️  'pi' is not installed or not in PATH. Skipping extension installation."
+    echo "Please install pi first from: https://github.com/austingardner/pi"
+fi
+
+echo ""
+echo "=================================================="
+echo "🎉 Setup Complete!"
+echo "=================================================="
+echo "Available new commands (after restarting terminal or running source ~/.zshrc):"
+echo "  j          - alias for 'just'"
+echo "  jg         - alias for 'just --global-justfile'"
+echo "  vllm-start - alias to start the vllm mlx server"
+echo ""
+echo "To use pi, don't forget to export your API key (e.g. export GEMINI_API_KEY='your_key')"
