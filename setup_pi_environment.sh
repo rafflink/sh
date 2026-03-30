@@ -5,6 +5,32 @@ set -e # Exit on any error
 OS="$(uname)"
 
 echo "=================================================="
+
+# Install 'uv' if not present
+if ! command -v uv &> /dev/null; then
+    echo "📦 Installing 'uv' via curl..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+else
+    echo "✅ 'uv' is already installed."
+fi
+
+
+# Install Oh My Zsh if not present
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    echo "📦 Installing 'Oh My Zsh'..."
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+else
+    echo "✅ 'Oh My Zsh' is already installed."
+fi
+
+# Install Powerlevel10k theme if not present
+if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
+    echo "📦 Installing 'Powerlevel10k' theme..."
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+else
+    echo "✅ 'Powerlevel10k' is already installed."
+fi
+
 echo "🚀 Setting up pi, just, and vllm environment..."
 echo "=================================================="
 
