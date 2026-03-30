@@ -4,7 +4,7 @@ A set of automated bash scripts to supercharge your terminal with the [Pi Coding
 
 ## Scripts Included
 
-### `setup_pi_environment.sh`
+### `install.sh`
 The ultimate setup script. It handles:
 - Installing `just` and `fd` (required by `pi`) using `brew` or `apt-get`.
 - Adding shorthand aliases (`j` for `just`, `jg` for `just --global-justfile`) to your shell profiles (`.zshrc`, `.bashrc`, etc.).
@@ -14,7 +14,7 @@ The ultimate setup script. It handles:
 
 **Usage:**
 ```bash
-./setup_pi_environment.sh
+./install.sh
 ```
 
 ### `install_pi_extensions.sh`
