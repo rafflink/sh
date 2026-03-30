@@ -108,6 +108,21 @@ else
     grep -q "vllm-start:" "$HOME/.justfile" || printf "vllm-start:\n\tvllm-mlx serve mlx-community/Llama-3.2-3B-Instruct-4bit --port 8000\n" >> "$HOME/.justfile"
 fi
 
+
+# Install 'pi' if not present
+if ! command -v pi &> /dev/null; then
+    echo "📦 Installing 'pi' globally..."
+    # If npm is missing, maybe we should install node first, but let's assume it's there
+    if command -v npm &> /dev/null; then
+        npm install -g @austingardner/pi
+    else
+        echo "❌ Error: npm not found. Please install Node.js manually to install pi."
+        exit 1
+    fi
+else
+    echo "✅ 'pi' is already installed."
+fi
+
 # 4. Install pi extensions
 echo "🧩 Installing pi agent extensions..."
 extensions=(
