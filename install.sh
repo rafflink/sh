@@ -157,6 +157,31 @@ else
     echo "Please install pi first from: https://github.com/austingardner/pi"
 fi
 
+
+# 5. Patch legacy theme files that are missing required properties in newer versions of 'pi'
+echo "🎨 Patching outdated extension themes..."
+find "$HOME/.pi/agent/git" -name "*.json" | while read -r file; do
+    if grep -q '"colors":' "$file"; then
+        # Use Python to safely append missing UI colors (like thinking blocks) if they don't exist
+        python3 -c "
+import json, sys
+try:
+    with open('$file', 'r') as f: data = json.load(f)
+    if 'colors' in data:
+        c = data['colors']
+        req = {'bashMode': '#ffffff', 'thinkingOff': '#333333', 'thinkingMinimal': '#555555', 'thinkingLow': '#777777', 'thinkingMedium': '#999999', 'thinkingHigh': '#bbbbbb', 'thinkingXhigh': '#dddddd', 'thinkingText': '#aaaaaa'}
+        changed = False
+        for k, v in req.items():
+            if k not in c:
+                c[k] = v
+                changed = True
+        if changed:
+            with open('$file', 'w') as f: json.dump(data, f, indent=2)
+except: pass
+"
+    fi
+done
+
 echo ""
 echo "=================================================="
 echo "🎉 Setup Complete!"
