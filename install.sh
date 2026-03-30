@@ -123,6 +123,11 @@ else
     echo "✅ 'pi' is already installed."
 fi
 
+
+# 4. Clean up legacy pi extension folders to prevent duplicates
+echo "🧹 Cleaning up legacy pi extension folders..."
+rm -rf "$HOME/.pi/agent/extensions/pi-review-loop"
+
 # 4. Install pi extensions
 echo "🧩 Installing pi agent extensions..."
 extensions=(
