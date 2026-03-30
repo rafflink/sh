@@ -6,6 +6,22 @@ OS="$(uname)"
 
 echo "=================================================="
 
+# Install Homebrew if not present (macOS/Linux)
+if ! command -v brew &> /dev/null; then
+    echo "📦 Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+    # Add Homebrew to PATH for the rest of the script (Linux or Apple Silicon)
+    if [ -d "/opt/homebrew/bin" ]; then
+        export PATH="/opt/homebrew/bin:$PATH"
+    elif [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    fi
+else
+    echo "✅ Homebrew is already installed."
+fi
+
+
 # Install 'uv' if not present
 if ! command -v uv &> /dev/null; then
     echo "📦 Installing 'uv' via curl..."
